@@ -47,5 +47,3 @@ For a demonstration of the system in action, please check out the video:
 ## License:
 This project is open-source and released under the MIT License.
 
-Feel free to use, modify, and contribute to this project.
-
