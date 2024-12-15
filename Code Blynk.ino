@@ -1,40 +1,18 @@
-/**********************************************************************************
- *  TITLE: Blynk + Manual Switch (latched) + IR + DHT11 control 4 Relays using NodeMCU (Real time feedback + no WiFi control)
- *  Click on the following links to learn more. 
- *  YouTube Video: https://youtu.be/UQ8hPqLkrac
- *  Related Blog : https://iotcircuithub.com/esp8266-projects/
- *  by Tech StudyCell
- *  Preferences--> Aditional boards Manager URLs : 
- *  https://dl.espressif.com/dl/package_esp32_index.json, http://arduino.esp8266.com/stable/package_esp8266com_index.json
- *  
- *  Download Board ESP8266 NodeMCU : https://github.com/esp8266/Arduino
- *
- *  Download the libraries 
- *  Blynk Library (1.0.1):  https://github.com/blynkkk/blynk-library
- *  IRremote Library (3.6.1): https://github.com/Arduino-IRremote/Arduino-IRremote
- *  DHT Library (1.4.3): https://github.com/adafruit/DHT-sensor-library
- **********************************************************************************/
-
-/* Fill-in your Template ID (only if using Blynk.Cloud) */
 #define BLYNK_TEMPLATE_ID ""
 #define BLYNK_DEVICE_NAME ""
 #define BLYNK_AUTH_TOKEN ""
 
-// Your WiFi credentials.
-// Set password to "" for open networks.
 char ssid[] = "WIFI NAME";
 char pass[] = "WIFI PASSWORD";
 
-bool fetch_blynk_state = true;  //true or false
+bool fetch_blynk_state = true; 
 
-//Update the HEX code of IR Remote buttons 0x<HEX CODE>
 #define IR_Button_1   0x80BF49B6
 #define IR_Button_2   0x80BFC936
 #define IR_Button_3   0x80BF33CC
 #define IR_Button_4   0x80BF718E
 #define IR_All_Off    0x80BF3BC4
 
-//#define BLYNK_PRINT Serial
 #include <ESP8266WiFi.h>        
 #include <BlynkSimpleEsp8266.h>
 #include <DHT.h>  
@@ -43,15 +21,12 @@ bool fetch_blynk_state = true;  //true or false
 #define DHTPIN              D4 //D4  pin connected with DHT
 #define IR_RECV_PIN         9 // SD2 (IR receiver pin)
 
-// Uncomment whatever type you're using!
 #define DHTTYPE DHT11     // DHT 11
-//#define DHTTYPE DHT22   // DHT 22, AM2302, AM2321
-//#define DHTTYPE DHT21   // DHT 21, AM2301
+
 
 IRrecv irrecv(IR_RECV_PIN);
 decode_results results;
   
-// define the GPIO connected with Relays and switches
 #define RelayPin1 5  //D1
 #define RelayPin2 4  //D2
 #define RelayPin3 14 //D5
@@ -64,7 +39,6 @@ decode_results results;
 
 #define wifiLed   16   //D0
 
-//Change the virtual pins according the rooms
 #define VPIN_BUTTON_1    V1 
 #define VPIN_BUTTON_2    V2
 #define VPIN_BUTTON_3    V3 
@@ -74,13 +48,12 @@ decode_results results;
 #define VPIN_TEMPERATURE V6
 #define VPIN_HUMIDITY    V7
 
-// Relay State
-bool toggleState_1 = LOW; //Define integer to remember the toggle state for relay 1
-bool toggleState_2 = LOW; //Define integer to remember the toggle state for relay 2
-bool toggleState_3 = LOW; //Define integer to remember the toggle state for relay 3
-bool toggleState_4 = LOW; //Define integer to remember the toggle state for relay 4
+bool toggleState_1 = LOW; 
+bool toggleState_2 = LOW;
+bool toggleState_3 = LOW; 
+bool toggleState_4 = LOW; 
 
-// Switch State
+
 bool SwitchState_1 = LOW;
 bool SwitchState_2 = LOW;
 bool SwitchState_3 = LOW;
@@ -95,7 +68,6 @@ char auth[] = BLYNK_AUTH_TOKEN;
 BlynkTimer timer;
 DHT dht(DHTPIN, DHTTYPE);
 
-// When App button is pushed - switch the state
 
 BLYNK_WRITE(VPIN_BUTTON_1) {
   toggleState_1 = param.asInt();
@@ -130,7 +102,7 @@ void all_SwitchOff(){
   Blynk.virtualWrite(VPIN_TEMPERATURE, temperature1);
 }
 
-void checkBlynkStatus() { // called every 2 seconds by SimpleTimer
+void checkBlynkStatus() { 
 
   bool isconnected = Blynk.connected();
   if (isconnected == false) {
@@ -147,12 +119,10 @@ void checkBlynkStatus() { // called every 2 seconds by SimpleTimer
     Blynk.virtualWrite(VPIN_BUTTON_4, toggleState_4);
     }
     digitalWrite(wifiLed, LOW);
-    //Serial.println("Blynk Connected");
-  }
+    }
 }
 
 BLYNK_CONNECTED() {
-  // Request the latest state from the server
   if (fetch_blynk_state){
     Blynk.syncVirtual(VPIN_BUTTON_1);
     Blynk.syncVirtual(VPIN_BUTTON_2);
@@ -166,7 +136,7 @@ BLYNK_CONNECTED() {
 void readSensor(){
   
   float h = dht.readHumidity();
-  float t = dht.readTemperature(); // or dht.readTemperature(true) for Fahrenheit
+  float t = dht.readTemperature(); 
   
   if (isnan(h) || isnan(t)) {
     Serial.println("Failed to read from DHT sensor!");
@@ -175,16 +145,12 @@ void readSensor(){
   else {
     humidity1 = h;
     temperature1 = t;
-   // Serial.println(temperature1);
-   // Serial.println(humidity1);
   }  
 }
 
 void sendSensor()
 {
   readSensor();
-  // You can send any value at any time.
-  // Please don't send more that 10 values per second.
   Blynk.virtualWrite(VPIN_HUMIDITY, humidity1);
   Blynk.virtualWrite(VPIN_TEMPERATURE, temperature1);
 }
@@ -221,7 +187,6 @@ void ir_remote(){
             break;
           default : break;         
         }   
-        //Serial.println(results.value, HEX);    
         irrecv.resume();   
   } 
 }
@@ -302,21 +267,19 @@ void setup()
   pinMode(SwitchPin3, INPUT_PULLUP);
   pinMode(SwitchPin4, INPUT_PULLUP);
 
-  //During Starting all Relays should TURN OFF
   digitalWrite(RelayPin1, !toggleState_1);
   digitalWrite(RelayPin2, !toggleState_2);
   digitalWrite(RelayPin3, !toggleState_3);
   digitalWrite(RelayPin4, !toggleState_4);
 
-  irrecv.enableIRIn(); // Enabling IR sensor
-  dht.begin();    // Enabling DHT sensor
+  irrecv.enableIRIn(); 
+  dht.begin();   
 
   digitalWrite(wifiLed, HIGH);
 
-  //Blynk.begin(auth, ssid, pass);
   WiFi.begin(ssid, pass);
-  timer.setInterval(2000L, checkBlynkStatus); // check if Blynk server is connected every 2 seconds
-  timer.setInterval(1000L, sendSensor); // Sending Sensor Data to Blynk Cloud every 1 second
+  timer.setInterval(2000L, checkBlynkStatus); 
+  timer.setInterval(1000L, sendSensor); 
   Blynk.config(auth);
   delay(1000);
   
